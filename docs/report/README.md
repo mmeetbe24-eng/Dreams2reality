@@ -7,7 +7,7 @@ This directory contains the comprehensive **Mid-Semester Lab Evaluation 1 Report
 ## Access the Report
 
 * 📖 **[View Full Report Online (Markdown Version)](Lab_Eval_1_Report.md)** — Opens and renders natively inside GitHub with all sections, tables, IEEE SRS, and user stories.
-* 📥 **[Download Official Evaluation PDF](Lab_Eval_1_Report.pdf)** — 18-page formal report formatted strictly to the official TIET template.
+* 📥 **[Download Official Evaluation PDF](Lab_Eval_1_Report.pdf)** — 21-page formal report for MST lab evaluation.
 
 > **Note on GitHub PDF Viewer:** GitHub's in-browser previewer often displays *"Unable to render code block"* on multi-page PDF documents. To view the PDF, click the **Download** button at the top right, or read the full report directly online via [`Lab_Eval_1_Report.md`](Lab_Eval_1_Report.md).
 
