@@ -1,0 +1,11 @@
+﻿services:
+  - type: web
+    name: dreams2reality-bci
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0

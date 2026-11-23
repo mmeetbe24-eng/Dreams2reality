@@ -1,0 +1,14 @@
+﻿version: "3.8"
+
+services:
+  dreams2reality:
+    build: .
+    container_name: dreams2reality-bci
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - SAMPLING_RATE=128
+      - ARTIFACT_THRESHOLD=250.0
+    restart: unless-stopped

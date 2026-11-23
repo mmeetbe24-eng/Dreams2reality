@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Supervisor Live Monitor — Dreams2Reality</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .spec-container {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .preset-btn {
+            width: auto;
+            padding: 5px 11px;
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .preset-btn:hover {
+            background: rgba(0, 242, 254, 0.15);
+            border-color: var(--cyan);
+            color: #fff;
+        }
+        .feed-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .feed-badge-action { background: rgba(0, 242, 254, 0.15); color: var(--cyan); border: 1px solid rgba(0, 242, 254, 0.3); }
+        .feed-badge-trauma { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); }
+        .feed-badge-connect { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .feed-badge-journal { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <div class="brand-icon-wrapper">🧠</div>
+            <div class="brand-title">
+                <h1>Dreams2Reality Live Monitor</h1>
+                <p>Clinical Polysomnography Supervision & Telemetry Surveillance</p>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">🏠 Portal</a>
+            <a href="/session" target="_blank" class="nav-link">🔬 Open Participant Tab ↗</a>
+            <a href="/monitor" class="nav-link active">📡 Live Supervisor</a>
+            <a href="/archive" class="nav-link">📁 Records</a>
+            <a href="/docs" target="_blank" class="nav-link">📚 API Specs</a>
+            <div class="status-pill" style="margin-left: 10px;">
+                <div class="pulse-dot"></div>
+                <span id="sup-status">SUPERVISOR CONNECTED</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="page-container" style="max-width: 1400px; margin: 0 auto; width: 100%;">
+        <!-- Top KPI Stats Row -->
+        <div class="kpi-row" style="margin-bottom: 20px;">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(0, 242, 254, 0.15); color: var(--cyan); border: 1px solid rgba(0, 242, 254, 0.3);">👥</div>
+                <div>
+                    <div id="kpi-active-users" class="kpi-val">0</div>
+                    <div class="kpi-label">Active Connected Participants</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3);">🌙</div>
+                <div>
+                    <div id="kpi-rem-count" class="kpi-val">0</div>
+                    <div class="kpi-label">Active REM / Dreaming States</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🚨</div>
+                <div>
+                    <div id="kpi-trauma-count" class="kpi-val">0</div>
+                    <div class="kpi-label">Active Acute Trauma Alerts</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">⚡</div>
+                <div>
+                    <div id="kpi-events-count" class="kpi-val">0</div>
+                    <div class="kpi-label">Live User Interaction Events</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supervisor Grid: Active Directory & Live Activity Stream -->
+        <div class="monitor-grid">
+            <!-- Left Column: Active Participants Directory & Spectator -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Active Participants Table -->
+                <div class="card">
+                    <div class="card-title">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>Active Connected Participants Directory</span>
+                            <span class="status-pill" style="font-size: 10px; padding: 2px 8px;">LIVE CENTRAL DISPATCH</span>
+                        </div>
+                        <span id="table-timestamp" style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">SYNCING...</span>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Participant Name</th>
+                                    <th>Session ID</th>
+                                    <th>Source / Mode</th>
+                                    <th>Duration</th>
+                                    <th>Stage</th>
+                                    <th>HVdC Archetype</th>
+                                    <th>Trauma Alert</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="participants-table-body">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 36px;">
+                                        Waiting for participants to connect...<br>
+                                        <a href="/session" target="_blank" style="color: var(--cyan); text-decoration: underline; margin-top: 8px; display: inline-block;">
+                                            Open Participant Cockpit ↗
+                                        </a> to simulate or connect a user session.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Live Spectator Inspection Panel -->
+                <div id="spectator-card" class="card spec-container" style="border-color: rgba(0, 242, 254, 0.4); box-shadow: 0 0 30px rgba(0, 242, 254, 0.1);">
+                    <div class="card-title">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="pulse-dot"></div>
+                            <span>Spectator Oscilloscope: <span id="spec-user-title" style="color: var(--cyan); font-weight: bold; font-family: var(--font-mono);">--</span></span>
+                        </div>
+                        <button id="btn-close-spectator" style="width: auto; padding: 4px 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); font-size: 11.5px;">✕ Close Spectator</button>
+                    </div>
+
+                    <div style="position: relative; width: 100%; height: 200px; background: #040711; border-radius: var(--radius-md); border: 1px solid rgba(0, 242, 254, 0.2); overflow: hidden;">
+                        <canvas id="spec-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+                        
+                        <!-- Grid Overlay Labels -->
+                        <div style="position: absolute; top: 6px; left: 10px; font-family: var(--font-mono); font-size: 10px; color: rgba(0, 242, 254, 0.7);">
+                            CH1 (T7): <span id="spec-t7-val" style="color: #fff; font-weight: bold;">0.0 µV</span>
+                        </div>
+                        <div style="position: absolute; bottom: 6px; left: 10px; font-family: var(--font-mono); font-size: 10px; color: rgba(245, 158, 11, 0.8);">
+                            CH2 (T8): <span id="spec-t8-val" style="color: #fff; font-weight: bold;">0.0 µV</span>
+                        </div>
+                        <div style="position: absolute; top: 6px; right: 10px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">
+                            Active Scenario: <span id="spec-scenario-val" style="color: var(--cyan); font-weight: bold;">--</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--text-secondary);">
+                        <div style="display: flex; gap: 14px;">
+                            <span>Filter: <b style="color: #fff;">0.5 - 45 Hz Bandpass</b></span>
+                            <span>Notch: <b style="color: #fff;">50 Hz Active</b></span>
+                            <span>Impedance Alignment: <b style="color: var(--emerald);">Euclidean OK</b></span>
+                        </div>
+                        <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">128 Hz Real-Time Stream</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Real-Time Interaction Feed & Supervisor Controls -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Real-Time Interaction Feed -->
+                <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="card-title">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>Real-Time Interaction Feed</span>
+                            <span class="status-pill" style="font-size: 10px; padding: 2px 8px;">WEBSOCKET AUDIT</span>
+                        </div>
+                        <button id="btn-clear-feed" style="width: auto; padding: 2px 8px; font-size: 10.5px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Clear</button>
+                    </div>
+
+                    <div id="event-feed-container" class="event-feed" style="flex: 1; min-height: 280px; max-height: 400px;">
+                        <div class="event-item">
+                            <div class="event-header">
+                                <span class="feed-badge feed-badge-connect">SYSTEM</span>
+                                <span>INITIALIZED</span>
+                            </div>
+                            <div class="event-msg" style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">
+                                Central Supervisor WebSocket listening. Any user interaction across client cockpits will broadcast here instantly in real time.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Send Supervisor Intervention -->
+                <div class="card">
+                    <div class="card-title">
+                        <span>Clinical Intervention Dispatcher</span>
+                        <span style="font-size: 11px; color: var(--cyan); font-family: var(--font-mono);">ZERO-LATENCY IPC</span>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" for="select-target-user">Target Participant</label>
+                        <select id="select-target-user">
+                            <option value="">-- No Active Users Connected --</option>
+                        </select>
+                    </div>
+
+                    <!-- Rapid Preset Prompts -->
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">RAPID CLINICAL PRESETS:</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <button class="preset-btn" onclick="applyPreset('Impedance calibration notice: Please adjust bilateral electrode contacts.')">⚡ Check Impedance</button>
+                            <button class="preset-btn" onclick="applyPreset('Please relax jaw and ocular muscles to reduce muscle artifact.')">💤 Relax Muscles</button>
+                            <button class="preset-btn" onclick="applyPreset('Nightmare alert logged. Are you awake and conscious?')">🚨 Trauma Query</button>
+                            <button class="preset-btn" onclick="applyPreset('Trial concluding in 5 minutes. Prepare for morning wake protocol.')">🌅 Conclude Trial</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" for="input-supervisor-msg">Message / Clinical Instruction</label>
+                        <input type="text" id="input-supervisor-msg" placeholder="e.g. Please check your T7 electrode contact">
+                    </div>
+
+                    <button id="btn-send-supervisor-msg" class="btn-primary" style="padding: 10px 16px;">
+                        📢 Dispatch Clinical Intervention
+                    </button>
+                    <div id="intervention-status" style="display: none; font-size: 11.5px; color: var(--emerald); text-align: center; margin-top: 8px; font-family: var(--font-mono);">
+                        ✓ Message dispatched to participant's screen!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div>Clinical Supervisor Dashboard • Central Session Manager • Zero Hardcoded Data</div>
+        <div>Dreams2Reality • UCS503 Lab Evaluation</div>
+    </footer>
+
+    <script src="/static/monitor.js"></script>
+    <script>
+        function applyPreset(text) {
+            const input = document.getElementById('input-supervisor-msg');
+            input.value = text;
+            input.focus();
+        }
+        document.getElementById('btn-clear-feed').addEventListener('click', () => {
+            document.getElementById('event-feed-container').innerHTML = '';
+        });
+    </script>
+</body>
+</html>

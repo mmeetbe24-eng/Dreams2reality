@@ -1,0 +1,353 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trial Archive & Polysomnography Records — Dreams2Reality BCI</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-input {
+            flex: 1;
+            min-width: 220px;
+            background: rgba(6, 10, 18, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+        }
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+        }
+        .journal-card {
+            background: rgba(6, 10, 18, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .journal-card:hover {
+            border-color: rgba(0, 242, 254, 0.3);
+            background: rgba(13, 20, 36, 0.7);
+        }
+        .affect-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <div class="brand-icon-wrapper">🧠</div>
+            <div class="brand-title">
+                <h1>Dreams2Reality Archive</h1>
+                <p>Polysomnographic Records & Clinical Report Repository</p>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">🏠 Portal</a>
+            <a href="/session" class="nav-link">🔬 Participant Cockpit</a>
+            <a href="/monitor" class="nav-link">📡 Live Supervisor</a>
+            <a href="/archive" class="nav-link active">📁 Records</a>
+            <a href="/docs" target="_blank" class="nav-link">📚 API Specs</a>
+            <div class="status-pill" style="margin-left: 10px;">
+                <div class="pulse-dot"></div>
+                <span id="archive-status">SYNCED WITH CLINICAL VAULT</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-container" style="max-width: 1300px; margin: 0 auto; width: 100%;">
+        <!-- Archive KPI Summary Banner -->
+        <div class="kpi-row" style="margin-bottom: 20px;">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(0, 242, 254, 0.15); color: var(--cyan); border: 1px solid rgba(0, 242, 254, 0.3);">📊</div>
+                <div>
+                    <div id="stat-total-records" class="kpi-val">0</div>
+                    <div class="kpi-label">Total Clinical Records</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3);">🌙</div>
+                <div>
+                    <div id="stat-rem-trials" class="kpi-val">0</div>
+                    <div class="kpi-label">Dream / REM Sessions</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">🚨</div>
+                <div>
+                    <div id="stat-traumas-logged" class="kpi-val">0</div>
+                    <div class="kpi-label">Acute Traumas Caught</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3);">📖</div>
+                <div>
+                    <div id="stat-journals-count" class="kpi-val">0</div>
+                    <div class="kpi-label">Subjective Dream Journals</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historical Polysomnography Records Table -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-title">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>Completed & Live Polysomnography Records</span>
+                    <span class="status-pill" style="font-size: 10px; padding: 2px 8px;">PHYSIOMETRIC REPOSITORY</span>
+                </div>
+                <button id="btn-refresh-archive" style="width: auto; padding: 5px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); font-size: 12px; color: #fff;">
+                    🔄 Refresh Records
+                </button>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="filter-bar">
+                <input type="text" id="filter-search" class="filter-input" placeholder="🔍 Search participant name, session ID, or archetype...">
+                <select id="filter-stage" style="width: auto; padding: 8px 12px; background: rgba(6, 10, 18, 0.6); border: 1px solid var(--border-subtle); color: #fff; border-radius: var(--radius-sm); font-size: 12.5px;">
+                    <option value="ALL">All Sleep Stages</option>
+                    <option value="WAKE">Wake</option>
+                    <option value="N1">Stage N1</option>
+                    <option value="N2">Stage N2</option>
+                    <option value="N3">Stage N3 (SWS)</option>
+                    <option value="REM">Stage REM</option>
+                </select>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Subject / Patient</th>
+                            <th>Session ID</th>
+                            <th>Source Record</th>
+                            <th>Duration</th>
+                            <th>Sleep Stage</th>
+                            <th>HVdC Dream Mentation</th>
+                            <th>Trauma Alert</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive-table-body">
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 36px;">
+                                Loading session records from clinical repository...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Subjective Dream Mentation Logs Section -->
+        <div class="card">
+            <div class="card-title">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>Subjective Dream Mentation Journal Vault</span>
+                    <span class="status-pill" style="font-size: 10px; padding: 2px 8px; color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">RUSSELL AFFECTIVE CODING</span>
+                </div>
+            </div>
+
+            <div id="journal-vault-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 24px;">
+                    No dream mentation journals logged yet. You can submit one from the Participant Cockpit!
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div>Dreams2Reality Neurological Records Repository • PhysioNet Standardized • ReportLab Automated PDF Engine</div>
+        <div>Thapar Institute of Engineering & Technology</div>
+    </footer>
+
+    <script>
+        let cachedSessions = [];
+
+        function loadRecords() {
+            Promise.all([
+                fetch('/api/sessions').then(r => r.json()),
+                fetch('/api/sessions/archived').then(r => r.json())
+            ]).then(([activeData, archData]) => {
+                const activeList = activeData.sessions || [];
+                const archList = archData.sessions || [];
+                
+                // Merge without duplicates
+                const seen = new Set();
+                cachedSessions = [];
+                [...activeList, ...archList].forEach(s => {
+                    if (!seen.has(s.session_id)) {
+                        seen.add(s.session_id);
+                        cachedSessions.push(s);
+                    }
+                });
+
+                renderTable();
+                updateStats();
+                loadJournalVault();
+            }).catch(err => {
+                console.error("Failed to load records:", err);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('stat-total-records').textContent = cachedSessions.length;
+            let remCount = 0;
+            let traumaCount = 0;
+            cachedSessions.forEach(s => {
+                if ((s.stage || '').toUpperCase() === 'REM') remCount++;
+                traumaCount += (s.total_traumas || 0);
+            });
+            document.getElementById('stat-rem-trials').textContent = remCount;
+            document.getElementById('stat-traumas-logged').textContent = traumaCount;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('archive-table-body');
+            const search = document.getElementById('filter-search').value.toLowerCase().trim();
+            const stageFilter = document.getElementById('filter-stage').value;
+
+            const filtered = cachedSessions.filter(s => {
+                const matchSearch = !search || 
+                    (s.user_name || '').toLowerCase().includes(search) || 
+                    (s.session_id || '').toLowerCase().includes(search) ||
+                    (s.dream_archetype || '').toLowerCase().includes(search);
+                const matchStage = stageFilter === 'ALL' || (s.stage || '').toUpperCase() === stageFilter;
+                return matchSearch && matchStage;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:36px;">No records match your search criteria.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(s => {
+                const dur = Math.floor(s.duration_sec || 0);
+                const durStr = dur > 60 ? `${Math.floor(dur / 60)}m ${dur % 60}s` : `${dur}s`;
+                const stage = s.stage || 'Wake';
+                const stageLower = stage.toLowerCase();
+
+                html += `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div class="pulse-dot" style="background: ${s.total_traumas > 0 ? '#f43f5e' : 'var(--emerald)'};"></div>
+                                <b style="color: #fff;">${escapeHtml(s.user_name)}</b>
+                            </div>
+                        </td>
+                        <td style="font-family: var(--font-mono); color: var(--cyan); font-size:12px;">${s.session_id}</td>
+                        <td style="color: var(--text-secondary); font-size:12px;">
+                            ${s.dataset_record ? `<span style="color:var(--emerald);">PhysioNet (${s.dataset_record})</span>` : 'Virtual Ingestion'}
+                        </td>
+                        <td style="font-family: var(--font-mono); font-size:12px;">${durStr}</td>
+                        <td><span class="tag tag-${stageLower}">${stage}</span></td>
+                        <td style="color: #cbd5e1; font-size:12px;">${escapeHtml(s.dream_archetype || 'Restful Baseline')}</td>
+                        <td>${s.total_traumas > 0 ? `<span class="tag tag-alert">🚨 ${s.total_traumas} Traumas</span>` : '<span style="color:var(--emerald); font-size:11.5px; font-family:var(--font-mono);">0 (Normal)</span>'}</td>
+                        <td>
+                            <a href="/api/sessions/${s.session_id}/report-pdf" target="_blank" style="text-decoration:none;">
+                                <button style="width:auto; padding:5px 12px; background:linear-gradient(135deg, #e87722 0%, #c25e10 100%); border:none; font-size:11px; font-weight:700; border-radius:var(--radius-sm); color:#fff; cursor:pointer;">
+                                    📄 Download PDF Report
+                                </button>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function loadJournalVault() {
+            const vault = document.getElementById('journal-vault-list');
+            let allJournals = [];
+
+            cachedSessions.forEach(s => {
+                if (s.journals && s.journals.length > 0) {
+                    s.journals.forEach(j => {
+                        allJournals.push({
+                            ...j,
+                            userName: s.user_name,
+                            sessionId: s.session_id
+                        });
+                    });
+                }
+            });
+
+            document.getElementById('stat-journals-count').textContent = allJournals.length;
+
+            if (allJournals.length === 0) {
+                vault.innerHTML = `<div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 24px;">No dream mentation journals logged yet. You can submit one from the Participant Cockpit!</div>`;
+                return;
+            }
+
+            let jHtml = '';
+            allJournals.forEach(j => {
+                const val = parseFloat(j.valence || 0);
+                const valColor = val > 0.2 ? 'rgba(16, 185, 129, 0.15)' : (val < -0.2 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.08)');
+                const valTextColor = val > 0.2 ? 'var(--emerald)' : (val < -0.2 ? '#f87171' : 'var(--text-secondary)');
+                
+                jHtml += `
+                    <div class="journal-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <b style="color:#fff; font-size:13px;">${escapeHtml(j.userName)}</b>
+                                <span style="font-family:var(--font-mono); color:var(--cyan); font-size:11px;">[${j.sessionId}]</span>
+                            </div>
+                            <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">${new Date(j.timestamp * 1000).toLocaleString()}</span>
+                        </div>
+                        <div style="font-size:13px; color:#e2e8f0; line-height:1.5;">"${escapeHtml(j.text)}"</div>
+                        <div style="display:flex; gap:10px; margin-top:4px; flex-wrap:wrap; align-items:center;">
+                            <span class="affect-chip" style="background:${valColor}; color:${valTextColor};">
+                                Valence: ${val.toFixed(2)}
+                            </span>
+                            <span class="affect-chip" style="background:rgba(99, 102, 241, 0.15); color:#a5b4fc;">
+                                Arousal: ${parseFloat(j.arousal || 0).toFixed(2)}
+                            </span>
+                            ${j.tags ? j.tags.map(t => `<span class="tag" style="background:rgba(255,255,255,0.06); color:#cbd5e1;">#${escapeHtml(t)}</span>`).join('') : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            vault.innerHTML = jHtml;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        document.getElementById('btn-refresh-archive').addEventListener('click', loadRecords);
+        document.getElementById('filter-search').addEventListener('input', renderTable);
+        document.getElementById('filter-stage').addEventListener('change', renderTable);
+        window.addEventListener('DOMContentLoaded', loadRecords);
+    </script>
+</body>
+</html>

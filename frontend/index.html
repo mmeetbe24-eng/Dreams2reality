@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dreams2Reality — Two-Electrode BCI Neurological Platform</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <div class="brand-icon-wrapper">🧠</div>
+            <div class="brand-title">
+                <h1>Dreams2Reality</h1>
+                <p>Minimalist Two-Electrode BCI Platform • UCS503</p>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link active">🏠 Portal</a>
+            <a href="/session" class="nav-link">🔬 Participant Cockpit</a>
+            <a href="/monitor" class="nav-link">📡 Live Supervisor</a>
+            <a href="/archive" class="nav-link">📁 Records</a>
+            <a href="/docs" target="_blank" class="nav-link">📚 API Specs</a>
+            <div class="status-pill" style="margin-left: 10px;">
+                <div class="pulse-dot"></div>
+                <span id="sys-status">PLATFORM ONLINE</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Dreams2Reality Clinical & Research Portal</h1>
+        <p>A minimalist two-electrode ($T_7, T_8$) non-invasive brain-computer interface protocol. Real-time digital signal conditioning, Riemannian Euclidean alignment, and DC-CTA Net attention decoding.</p>
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 10px;">
+            <a href="/session" style="text-decoration: none;">
+                <button class="btn-primary" style="padding: 11px 24px; font-size: 13.5px; width: auto;">
+                    ▶️ Launch Participant Session
+                </button>
+            </a>
+            <a href="/monitor" style="text-decoration: none;">
+                <button style="padding: 11px 24px; font-size: 13.5px; width: auto; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15);">
+                    📡 Open Supervisor Live Monitor
+                </button>
+            </a>
+        </div>
+    </section>
+
+    <!-- Main Navigation Grid -->
+    <main class="page-container" style="max-width: 1200px; margin: 0 auto; width: 100%;">
+        <div class="portal-grid">
+            <!-- Card 1: Participant Cockpit -->
+            <a href="/session" class="portal-card">
+                <div style="font-size: 32px;">🧠</div>
+                <h3 style="font-size: 17px; font-weight: 700;">Participant / Subject Cockpit</h3>
+                <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                    Interactive client interface. Ingests dual-channel EEG microvolts ($T_7, T_8$), runs live sliding-window inference, tests scenarios (PTSD Nightmare, Deep Rest), and logs subjective dream mentation journals.
+                </p>
+                <div style="color: var(--cyan); font-size: 12px; font-weight: 700; margin-top: auto;">Open Cockpit →</div>
+            </a>
+
+            <!-- Card 2: Live Clinical Supervisor -->
+            <a href="/monitor" class="portal-card">
+                <div style="font-size: 32px;">📡</div>
+                <h3 style="font-size: 17px; font-weight: 700;">Clinical Supervisor Live Monitor</h3>
+                <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                    Multi-user surveillance cockpit. Watch real participants interact live in real-time. Inspect connected user brainwaves, observe trauma spikes, review audit feeds, and send supervisor interventions.
+                </p>
+                <div style="color: var(--cyan); font-size: 12px; font-weight: 700; margin-top: auto;">Open Live Monitor →</div>
+            </a>
+
+            <!-- Card 3: Research Archive -->
+            <a href="/archive" class="portal-card">
+                <div style="font-size: 32px;">📁</div>
+                <h3 style="font-size: 17px; font-weight: 700;">Trial Archive & Records</h3>
+                <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                    Browse completed polysomnographic sessions, sleep architecture statistics, subjective dream journals, and generate publication-grade clinical PDF reports.
+                </p>
+                <div style="color: var(--cyan); font-size: 12px; font-weight: 700; margin-top: auto;">View Records →</div>
+            </a>
+
+            <!-- Card 4: Scientific Architecture -->
+            <a href="/docs" target="_blank" class="portal-card">
+                <div style="font-size: 32px;">⚡</div>
+                <h3 style="font-size: 17px; font-weight: 700;">API Specs & System Health</h3>
+                <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                    Interactive OpenAPI / Swagger documentation, WebSocket protocols, and microservice status endpoints (`/healthz`, `/api/status`, `/ws/telemetry`, `/ws/monitor`).
+                </p>
+                <div style="color: var(--cyan); font-size: 12px; font-weight: 700; margin-top: auto;">Inspect API →</div>
+            </a>
+        </div>
+
+        <!-- Technical Specification Banner -->
+        <div class="card" style="margin-top: 14px;">
+            <div class="card-title">Algorithmic & Engineering Pillars</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                <div>
+                    <b style="color: #fff;">1. ANOVA F-Score Reduction:</b>
+                    <p>Empirically eliminates 62 wet leads down to bilateral temporal derivations ($T_7, T_8$), capturing >88% discriminative variance.</p>
+                </div>
+                <div>
+                    <b style="color: #fff;">2. Euclidean Covariance Alignment:</b>
+                    <p>Standardizes cross-subject skull impedance via Riemannian projection: $\tilde{C}_i = R^{-1/2} C_i R^{-1/2}$.</p>
+                </div>
+                <div>
+                    <b style="color: #fff;">3. DC-CTA Attention Network:</b>
+                    <p>PyTorch cross-temporal attention classifying AASM sleep stages and Hall-Van de Castle dream mentation archetypes.</p>
+                </div>
+                <div>
+                    <b style="color: #fff;">4. Cloud-Native WebSocket Core:</b>
+                    <p>Low-latency telemetry streaming (128 Hz sampling, 60 FPS Canvas) with multi-client real-time synchronization.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div>Dreams2Reality • UCS503 Software Engineering Final Evaluation • Thapar Institute of Engineering & Technology</div>
+        <div>Deployment Ready • FastAPI • PyTorch • WebSockets • Canvas 60 FPS</div>
+    </footer>
+
+    <script>
+        fetch('/api/status')
+            .then(res => res.json())
+            .then(data => {
+                const el = document.getElementById('sys-status');
+                if (data.status === 'online') {
+                    el.textContent = `ONLINE • ${data.active_users} SESSIONS • ${data.available_records} BENCHMARKS`;
+                }
+            })
+            .catch(() => {
+                document.getElementById('sys-status').textContent = 'OFFLINE';
+            });
+    </script>
+</body>
+</html>
