@@ -308,16 +308,22 @@ function initAssessmentTest() {
     btnOpen.addEventListener("click", () => modal.classList.add("active"));
     btnClose.addEventListener("click", () => modal.classList.remove("active"));
 
+    // Enable Apply button right away by computing a baseline profile
+    updateAssessmentProfile();
+
     stressSlider.addEventListener("input", (e) => {
         stressDisplay.textContent = `${e.target.value} / 10`;
+        updateAssessmentProfile();
+    });
+
+    document.getElementById("assess-ptsd").addEventListener("change", () => {
+        updateAssessmentProfile();
     });
 
     let trialState = "idle";
 
     reactBox.addEventListener("click", () => {
         if (trialState === "idle") {
-            reactionTrials = [];
-            trialIndex = 0;
             startNextTrial();
         } else if (trialState === "waiting_green") {
             clearTimeout(trialTimer);
@@ -328,13 +334,16 @@ function initAssessmentTest() {
             const latency = Date.now() - trialStartTime;
             reactionTrials.push(latency);
             reactBox.classList.remove("ready");
-            reactBox.textContent = `Latency: ${latency} ms!`;
             trialState = "idle";
 
+            updateAssessmentProfile();
+
             if (reactionTrials.length < 3) {
-                reactRes.textContent = `Trial ${reactionTrials.length} / 3: ${latency}ms. Click for next trial.`;
+                reactBox.textContent = `Trial ${reactionTrials.length} Done (${latency}ms)! Click for Trial ${reactionTrials.length + 1}`;
+                reactRes.textContent = `Trial ${reactionTrials.length} / 3: ${latency}ms recorded. You can click 'Apply Calibration' below or click this box to do Trial ${reactionTrials.length + 1}!`;
             } else {
-                finishAssessment();
+                reactBox.textContent = "✓ All 3 Trials Completed!";
+                reactRes.textContent = `Completed 3/3 trials! Mean Latency: ${calculatedProfile.reaction_time_ms}ms. Click 'Apply Calibration' below!`;
             }
         }
     });
@@ -343,7 +352,7 @@ function initAssessmentTest() {
         trialState = "waiting_green";
         reactBox.textContent = "Wait for GREEN...";
         reactBox.classList.remove("ready");
-        const delay = 1200 + Math.random() * 2000;
+        const delay = 1000 + Math.random() * 1800;
         trialTimer = setTimeout(() => {
             trialState = "green_ready";
             reactBox.classList.add("ready");
@@ -352,14 +361,18 @@ function initAssessmentTest() {
         }, delay);
     }
 
-    function finishAssessment() {
-        const sum = reactionTrials.reduce((a, b) => a + b, 0);
-        const meanLatency = Math.round(sum / reactionTrials.length);
-        const variance = reactionTrials.reduce((a, b) => a + Math.pow(b - meanLatency, 2), 0) / reactionTrials.length;
-        const jitter = Math.round(Math.sqrt(variance));
+    function updateAssessmentProfile() {
+        let meanLatency = 240;
+        let jitter = 25;
+        if (reactionTrials.length > 0) {
+            const sum = reactionTrials.reduce((a, b) => a + b, 0);
+            meanLatency = Math.round(sum / reactionTrials.length);
+            const variance = reactionTrials.reduce((a, b) => a + Math.pow(b - meanLatency, 2), 0) / reactionTrials.length;
+            jitter = Math.round(Math.sqrt(variance));
+        }
 
-        const stress = parseInt(stressSlider.value, 10);
-        const ptsd = document.getElementById("assess-ptsd").value;
+        const stress = parseInt(stressSlider.value, 10) || 5;
+        const ptsd = document.getElementById("assess-ptsd").value || "Occasional";
 
         const betaBias = (0.7 + (stress / 10.0) * 0.9 + Math.min(0.3, jitter / 100.0)).toFixed(2);
         const alphaBias = Math.max(0.4, 1.4 - (stress / 10.0) * 0.8).toFixed(2);
@@ -381,17 +394,19 @@ function initAssessmentTest() {
 
         btnApply.disabled = false;
         btnApply.style.opacity = "1";
-        reactBox.textContent = "✓ 3 Trials Completed!";
+        btnApply.style.cursor = "pointer";
     }
 
     btnApply.addEventListener("click", () => {
-        if (!calculatedProfile) return;
+        if (!calculatedProfile) {
+            updateAssessmentProfile();
+        }
 
         fetch(`/api/sessions/${encodeURIComponent(sessionId)}/assessment`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(calculatedProfile)
-        });
+        }).catch(() => {});
 
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
