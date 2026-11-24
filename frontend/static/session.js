@@ -1,4 +1,4 @@
-﻿// frontend/static/session.js - Advanced Neurotech Oscilloscope & Clinical Interface
+// frontend/static/session.js - Advanced Neurotech Oscilloscope & Clinical Interface
 
 let ws = null;
 let sessionId = localStorage.getItem("d2r_session_id") || "SES-" + Math.floor(10000 + Math.random() * 90000);
@@ -338,13 +338,8 @@ function initAssessmentTest() {
 
             updateAssessmentProfile();
 
-            if (reactionTrials.length < 3) {
-                reactBox.textContent = `Trial ${reactionTrials.length} Done (${latency}ms)! Click for Trial ${reactionTrials.length + 1}`;
-                reactRes.textContent = `Trial ${reactionTrials.length} / 3: ${latency}ms recorded. You can click 'Apply Calibration' below or click this box to do Trial ${reactionTrials.length + 1}!`;
-            } else {
-                reactBox.textContent = "✓ All 3 Trials Completed!";
-                reactRes.textContent = `Completed 3/3 trials! Mean Latency: ${calculatedProfile.reaction_time_ms}ms. Click 'Apply Calibration' below!`;
-            }
+            reactBox.textContent = `Trial ${reactionTrials.length} Done (${latency}ms)! Click to test again`;
+            reactRes.textContent = `Completed ${reactionTrials.length} trial(s) • Mean Latency: ${calculatedProfile.reaction_time_ms}ms. Click 'Apply Calibration' anytime or keep testing!`;
         }
     });
 
@@ -416,8 +411,11 @@ function initAssessmentTest() {
         }
 
         modal.classList.remove("active");
-        document.getElementById("calibration-active-badge").style.display = "block";
-        document.getElementById("btn-open-assessment").textContent = "⚙️ Re-Calibrate Baseline";
+        const activeBadge = document.getElementById("calibration-active-badge");
+        if (activeBadge) activeBadge.style.display = "block";
+        const openBtn = document.getElementById("btn-open-assessment");
+        if (openBtn) openBtn.textContent = "⚙️ Re-Calibrate Baseline";
+        console.log("Calibration applied successfully:", calculatedProfile);
     });
 }
 
