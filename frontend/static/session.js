@@ -243,6 +243,7 @@ function bindControls() {
 
     // Triggers
     document.getElementById("btn-trigger-nightmare").addEventListener("click", () => {
+        playBedsideChime();
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: "TRIGGER_NIGHTMARE" }));
         }
@@ -431,26 +432,42 @@ function initAssessmentTest() {
 
 function playBedsideChime() {
     try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
         if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtx = new AudioContextClass();
         }
         if (audioCtx.state === "suspended") {
             audioCtx.resume();
         }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime + 0.15);
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
-        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.5);
+
+        const now = audioCtx.currentTime;
+
+        // Beep 1 (High pitch 880Hz)
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = "sawtooth";
+        osc1.frequency.setValueAtTime(880, now);
+        gain1.gain.setValueAtTime(0.3, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.18);
+
+        // Beep 2 (Alarm pulse 660Hz)
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = "sawtooth";
+        osc2.frequency.setValueAtTime(660, now + 0.22);
+        gain2.gain.setValueAtTime(0.35, now + 0.22);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.22);
+        osc2.stop(now + 0.45);
     } catch (e) {
-        console.warn("Audio chime prevented by browser:", e);
+        console.warn("Chime playback error:", e);
     }
 }
 
