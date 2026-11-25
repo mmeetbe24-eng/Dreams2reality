@@ -1,4 +1,4 @@
-// frontend/static/session.js - Advanced Neurotech Oscilloscope & Clinical Interface
+﻿// frontend/static/session.js - Advanced Neurotech Oscilloscope & Clinical Interface
 
 let ws = null;
 let sessionId = localStorage.getItem("d2r_session_id") || "SES-" + Math.floor(10000 + Math.random() * 90000);
@@ -40,6 +40,16 @@ window.addEventListener("DOMContentLoaded", () => {
     initAssessmentTest();
     initDatasetControls();
     initDreamTags();
+
+    // Unlock Web Audio on first user interaction anywhere on the page
+    const unlockAudio = () => {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        document.removeEventListener("click", unlockAudio);
+        document.removeEventListener("keydown", unlockAudio);
+    };
+    document.addEventListener("click", unlockAudio);
+    document.addEventListener("keydown", unlockAudio);
 });
 
 function initTelemetryWebSocket() {
@@ -421,19 +431,27 @@ function initAssessmentTest() {
 
 function playBedsideChime() {
     try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") {
+            audioCtx.resume();
+        }
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = "sine";
+        osc.type = "sawtooth";
         osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
-    } catch (e) {}
+        osc.stop(audioCtx.currentTime + 0.5);
+    } catch (e) {
+        console.warn("Audio chime prevented by browser:", e);
+    }
 }
 
 function updateBands(powers) {
